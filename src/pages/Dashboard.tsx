@@ -5,7 +5,6 @@ import {
   FiClock,
   FiLoader,
   FiCheckCircle,
-  FiXCircle,
   FiArrowRight,
   FiClipboard,
 } from 'react-icons/fi';
@@ -60,7 +59,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="font-serif text-3xl font-semibold text-text-primary mb-2">
           Dashboard
@@ -70,7 +68,6 @@ export const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Cards de estatísticas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
         <StatCard
           title="Total de orçamentos"
@@ -102,7 +99,6 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Últimos orçamentos */}
       <motion.div
         className="card overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
@@ -118,10 +114,7 @@ export const Dashboard: React.FC = () => {
               As 5 solicitações mais recentes
             </p>
           </div>
-          <Link
-            to="/quotes"
-            className="btn btn-ghost text-sm"
-          >
+          <Link to="/quotes" className="btn btn-ghost text-sm">
             Ver todos
             <FiArrowRight className="w-4 h-4" />
           </Link>

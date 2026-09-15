@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiMail, FiPhone, FiCalendar, FiFileText, FiSave } from 'react-icons/fi';
+import { FiMail, FiPhone, FiFileText, FiSave } from 'react-icons/fi';
 import { Modal } from './Modal';
 import { Badge } from './Badge';
 import type { Quote, QuoteStatus } from '../../types';
@@ -32,7 +32,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sincroniza quando o quote muda
   React.useEffect(() => {
     if (quote) {
       setStatus(quote.status);
@@ -49,7 +48,7 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
       toast.success('Orçamento atualizado!');
       onUpdated(response.data);
       onClose();
-    } catch (err) {
+    } catch {
       toast.error('Erro ao atualizar orçamento');
     } finally {
       setIsSaving(false);
@@ -63,7 +62,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalhes do orçamento" size="lg">
       <div className="space-y-6">
-        {/* Header com nome + status */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="font-serif text-2xl font-semibold text-text-primary mb-1">
@@ -87,7 +85,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Informações de contato */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="flex items-start gap-3 p-3 rounded-lg bg-bg-secondary">
             <FiMail className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
@@ -126,7 +123,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Serviço */}
         {quote.service && (
           <div className="flex items-start gap-3">
             <FiFileText className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
@@ -141,7 +137,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
           </div>
         )}
 
-        {/* Mensagem */}
         <div>
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-text-light mb-2">
             <FiFileText className="w-3.5 h-3.5" />
@@ -152,7 +147,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Atualização de status */}
         <div className="pt-4 border-t border-border-light space-y-4">
           <div>
             <label className="label">Atualizar status</label>
@@ -188,7 +182,6 @@ export const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
             />
           </div>
 
-          {/* Ações */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               onClick={handleSave}

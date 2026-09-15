@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiSettings, FiTool } from 'react-icons/fi';
+import { FiTool } from 'react-icons/fi';
 
 export const Settings: React.FC = () => {
   return (
