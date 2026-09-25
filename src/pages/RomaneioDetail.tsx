@@ -16,7 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { api, tokenStorage } from '../lib/api';
+import { api, tokenStorage, API_URL } from '../lib/api';
 import type { Romaneio, GradeItem } from '../types';
 
 export const RomaneioDetail: React.FC = () => {
@@ -93,7 +93,7 @@ export const RomaneioDetail: React.FC = () => {
       toast.loading('Gerando PDF...', { id: 'pdf' });
 
       const response = await fetch(
-        `http://localhost:3334/api/admin/romaneios/${romaneio.id}/pdf`,
+        `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

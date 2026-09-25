@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Pagination } from '../components/ui/Pagination';
 import { EmptyState } from '../components/ui/EmptyState';
-import { api, tokenStorage } from '../lib/api';
+import { api, tokenStorage, API_URL } from '../lib/api';
 import type { Romaneio, Pagination as PaginationType } from '../types';
 
 export const Romaneios: React.FC = () => {
@@ -93,13 +93,10 @@ export const Romaneios: React.FC = () => {
 
       toast.loading('Gerando PDF...', { id: 'pdf' });
 
-      const response = await fetch(
-        `http://localhost:3334/api/admin/romaneios/${romaneio.id}/pdf`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+    const response = await fetch(
+  `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
+  { headers: { Authorization: `Bearer ${token}` } }
+);
       if (!response.ok) {
         throw new Error('Erro ao gerar PDF');
       }

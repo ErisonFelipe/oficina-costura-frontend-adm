@@ -17,7 +17,7 @@ import type {
   RomaneioStats,
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
 const TOKEN_KEY = 'oficina_adm_token';
 
 // ===== TOKEN MANAGEMENT =====
