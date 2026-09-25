@@ -259,10 +259,8 @@ export const Romaneios: React.FC = () => {
                       )}
                     </div>
                     <div className="col-span-2 text-xs text-text-secondary">
-                      {format(new Date(romaneio.data), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
-                    </div>
+                     {romaneio.data.split('-').reverse().join('/')}
+		     </div>
                     <div className="col-span-1 text-right text-sm font-semibold text-text-primary">
                       {romaneio.quantidadePecas.toLocaleString('pt-BR')}
                     </div>
@@ -310,10 +308,8 @@ export const Romaneios: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right text-xs text-text-light whitespace-nowrap">
-                        {format(new Date(romaneio.data), 'dd/MM/yy', {
-                          locale: ptBR,
-                        })}
-                      </div>
+                        {romaneio.data.split('-').reverse().join('/').substring(0, 8)}
+		       	</div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-text-light">

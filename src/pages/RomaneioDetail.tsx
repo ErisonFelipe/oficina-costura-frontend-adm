@@ -46,7 +46,7 @@ export const RomaneioDetail: React.FC = () => {
         setRomaneio(res.data);
         setForm({
           cliente: res.data.cliente,
-          data: res.data.data.split('T')[0],
+          data: res.data.data,
           produto: res.data.produto,
           referencia: res.data.referencia || '',
           tipoTecido: res.data.tipoTecido || '',
@@ -191,7 +191,7 @@ export const RomaneioDetail: React.FC = () => {
     if (!romaneio) return;
     setForm({
       cliente: romaneio.cliente,
-      data: romaneio.data.split('T')[0],
+      data: romaneio.data,
       produto: romaneio.produto,
       referencia: romaneio.referencia || '',
       tipoTecido: romaneio.tipoTecido || '',
@@ -371,10 +371,7 @@ export const RomaneioDetail: React.FC = () => {
               isEditing={isEditing}
               type="date"
               onChange={(v) => updateField('data', v)}
-              display={format(new Date(romaneio.data), 'dd/MM/yyyy', {
-                locale: ptBR,
-              })}
-            />
+	      display={romaneio.data.split('-').reverse().join('/')}/>
             <Field
               label="Produto"
               value={form.produto}
