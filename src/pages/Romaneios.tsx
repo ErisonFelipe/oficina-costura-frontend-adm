@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import {
   FiPlus,
   FiSearch,
-  FiFileText,
   FiDownload,
   FiEye,
   FiTrash2,
