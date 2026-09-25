@@ -57,6 +57,11 @@ async function request<T>(
     ...options.headers,
   };
 
+   // Só envia Content-Type se houver body
+  if (options.body) {
+    (headers as Record<string, string>)['Content-Type'] = 'application/json';
+  }
+
   if (requireAuth) {
     const token = tokenStorage.get();
     if (!token) {

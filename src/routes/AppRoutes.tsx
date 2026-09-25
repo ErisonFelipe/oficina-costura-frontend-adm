@@ -11,6 +11,7 @@ import { Settings } from '../pages/Settings';
 import { NotFound } from '../pages/NotFound';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { RomaneioForm } from '../pages/RomaneioForm';
+import { RomaneioDetail } from '../pages/RomaneioDetail';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/quotes/:id" element={<QuoteDetail />} />
 	  <Route path="/romaneios" element={<Romaneios />} />
 	  <Route path="/romaneios/novo" element={<RomaneioForm />} />
+	  <Route path="/romaneios/:id" element={<RomaneioDetail />} />
           <Route
             path="/users"
             element={
