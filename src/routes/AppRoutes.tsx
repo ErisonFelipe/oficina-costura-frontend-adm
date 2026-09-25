@@ -1,4 +1,5 @@
 import React from 'react';
+import { Romaneios } from '../pages/Romaneios';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { Login } from '../pages/Login';
@@ -29,6 +30,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/:id" element={<QuoteDetail />} />
+	  <Route path="/romaneios" element={<Romaneios />} />
           <Route
             path="/users"
             element={

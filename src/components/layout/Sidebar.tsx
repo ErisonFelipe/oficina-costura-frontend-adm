@@ -8,6 +8,7 @@ import {
   FiSettings,
   FiLogOut,
   FiScissors,
+  FiFileText,  
 } from 'react-icons/fi';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -21,6 +22,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: <FiGrid /> },
   { to: '/quotes', label: 'Orçamentos', icon: <FiClipboard /> },
+  { to: '/romaneios', label: 'Romaneios', icon: <FiFileText /> },
   { to: '/users', label: 'Usuários', icon: <FiUsers />, roles: ['ADMIN'] },
   { to: '/settings', label: 'Configurações', icon: <FiSettings />, roles: ['ADMIN'] },
 ];

@@ -9,6 +9,12 @@ import type {
   QuoteStatus,
   User,
   UserRole,
+  // Novos
+  CreateRomaneioPayload,
+  ListRomaneiosParams,
+  PaginatedRomaneios,
+  Romaneio,
+  RomaneioStats,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
@@ -197,6 +203,87 @@ export const api = {
 
     async delete(id: string): Promise<void> {
       await request(`/admin/users/${id}`, { method: 'DELETE' }, true);
+    },
+  },
+    // ===== ROMANEIOS (ADMIN) =====
+  romaneios: {
+    async list(params: ListRomaneiosParams = {}): Promise<PaginatedRomaneios> {
+      const search = new URLSearchParams();
+      if (params.search) search.set('search', params.search);
+      if (params.cliente) search.set('cliente', params.cliente);
+      if (params.page) search.set('page', String(params.page));
+      if (params.limit) search.set('limit', String(params.limit));
+
+      const qs = search.toString();
+      return request<PaginatedRomaneios>(
+        `/admin/romaneios${qs ? `?${qs}` : ''}`,
+        {},
+        true
+      );
+    },
+
+    async show(id: string): Promise<{ data: Romaneio }> {
+      return request<{ data: Romaneio }>(`/admin/romaneios/${id}`, {}, true);
+    },
+
+    async stats(): Promise<{ data: RomaneioStats }> {
+      return request<{ data: RomaneioStats }>(
+        '/admin/romaneios/stats',
+        {},
+        true
+      );
+    },
+
+    async create(
+      payload: CreateRomaneioPayload
+    ): Promise<{ message: string; data: Romaneio }> {
+      return request<{ message: string; data: Romaneio }>(
+        '/admin/romaneios',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+        true
+      );
+    },
+
+    async update(
+      id: string,
+      payload: Partial<CreateRomaneioPayload>
+    ): Promise<{ message: string; data: Romaneio }> {
+      return request<{ message: string; data: Romaneio }>(
+        `/admin/romaneios/${id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
+        true
+      );
+    },
+
+    async delete(id: string): Promise<void> {
+      await request(`/admin/romaneios/${id}`, { method: 'DELETE' }, true);
+    },
+
+    // Retorna a URL para baixar o PDF (o navegador faz o download direto)
+    getPdfUrl(id: string): string {
+      return `${API_URL}/admin/romaneios/${id}/pdf`;
+    },
+
+    // Baixa o PDF como blob (para casos onde precisamos do arquivo)
+    async downloadPdf(id: string): Promise<Blob> {
+      const token = tokenStorage.get();
+      if (!token) throw new ApiException('Não autenticado', 401);
+
+      const response = await fetch(`${API_URL}/admin/romaneios/${id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new ApiException('Erro ao baixar PDF', response.status);
+      }
+
+      return response.blob();
     },
   },
 };

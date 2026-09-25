@@ -74,3 +74,75 @@ export interface ApiError {
   details?: Record<string, string[]>;
   message?: string;
 }
+
+// ===== ROMANEIOS =====
+export interface GradeItem {
+  cor: string;
+  tamanho?: string;
+  quantidade: number;
+}
+
+export interface RomaneioCobranca {
+  valorUnitario: number;
+  valorTotal: number;
+  observacao?: string;
+}
+
+export interface Romaneio {
+  id: string;
+  numero: string;
+  cliente: string;
+  data: string;
+  produto: string;
+  referencia: string | null;
+  tipoTecido: string | null;
+  quantidadeRolos: number | null;
+  quantidadeFolhas: number | null;
+  quantidadeEncaixados: number | null;
+  quantidadePecas: number;
+  quantidadeVolumes: number | null;
+  cortadorResponsavel: string | null;
+  conferidoPor: string | null;
+  grade: GradeItem[];
+  cobranca: RomaneioCobranca;
+  observacoes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRomaneioPayload {
+  cliente: string;
+  data: string;
+  produto: string;
+  referencia?: string;
+  tipoTecido?: string;
+  quantidadeRolos?: number;
+  quantidadeFolhas?: number;
+  quantidadeEncaixados?: number;
+  quantidadePecas: number;
+  quantidadeVolumes?: number;
+  cortadorResponsavel?: string;
+  conferidoPor?: string;
+  grade: GradeItem[];
+  cobranca: RomaneioCobranca;
+  observacoes?: string;
+}
+
+export interface ListRomaneiosParams {
+  search?: string;
+  cliente?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RomaneioStats {
+  total: number;
+  doAno: number;
+  doMes: number;
+  pecasTotal: number;
+}
+
+export interface PaginatedRomaneios {
+  data: Romaneio[];
+  pagination: Pagination;
+}
