@@ -1,6 +1,12 @@
 <div align="center">
 
+<<<<<<< HEAD
 # 🔐 Linha & Ponto — Painel Administrativo
+=======
+> 📚 Veja a documentação completa de tecnologias em [TECNOLOGIAS.md](./TECNOLOGIAS.md)
+
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+>>>>>>> c6de70a6cfc9162e1d96c3a25e4d6bd39ad36481
 
 **Interface completa para gestão da oficina de costura Lunnexx**
 
