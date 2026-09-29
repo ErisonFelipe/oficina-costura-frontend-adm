@@ -12,6 +12,7 @@ import { NotFound } from '../pages/NotFound';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { RomaneioForm } from '../pages/RomaneioForm';
 import { RomaneioDetail } from '../pages/RomaneioDetail';
+import { Clients } from '../pages/Clients';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -35,6 +36,7 @@ export const AppRoutes: React.FC = () => {
 	  <Route path="/romaneios" element={<Romaneios />} />
 	  <Route path="/romaneios/novo" element={<RomaneioForm />} />
 	  <Route path="/romaneios/:id" element={<RomaneioDetail />} />
+	  <Route path="/clients" element={<Clients />} />
           <Route
             path="/users"
             element={

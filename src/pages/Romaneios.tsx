@@ -11,8 +11,6 @@ import {
   FiClipboard,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Pagination } from '../components/ui/Pagination';
 import { EmptyState } from '../components/ui/EmptyState';
 import { api, tokenStorage, API_URL } from '../lib/api';

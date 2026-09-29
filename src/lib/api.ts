@@ -9,12 +9,17 @@ import type {
   QuoteStatus,
   User,
   UserRole,
-  // Novos
   CreateRomaneioPayload,
   ListRomaneiosParams,
   PaginatedRomaneios,
   Romaneio,
   RomaneioStats,
+  Client,
+  ClientSearchResult,
+  CreateClientPayload,
+  UpdateClientPayload,
+  ListClientsParams,
+  PaginatedClients,
 } from '../types';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
@@ -289,6 +294,67 @@ export const api = {
       }
 
       return response.blob();
+    },
+  },
+    // ===== CLIENTES (ADMIN) =====
+  clients: {
+    async list(params: ListClientsParams = {}): Promise<PaginatedClients> {
+      const search = new URLSearchParams();
+      if (params.search) search.set('search', params.search);
+      if (params.active !== undefined) search.set('active', String(params.active));
+      if (params.page) search.set('page', String(params.page));
+      if (params.limit) search.set('limit', String(params.limit));
+
+      const qs = search.toString();
+      return request<PaginatedClients>(
+        `/admin/clients${qs ? `?${qs}` : ''}`,
+        {},
+        true
+      );
+    },
+
+    async show(id: string): Promise<{ data: Client }> {
+      return request<{ data: Client }>(`/admin/clients/${id}`, {}, true);
+    },
+
+    async search(term: string): Promise<{ data: ClientSearchResult[] }> {
+      const qs = new URLSearchParams({ q: term });
+      return request<{ data: ClientSearchResult[] }>(
+        `/admin/clients/search?${qs}`,
+        {},
+        true
+      );
+    },
+
+    async create(
+      payload: CreateClientPayload
+    ): Promise<{ message: string; data: Client }> {
+      return request<{ message: string; data: Client }>(
+        '/admin/clients',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        },
+        true
+      );
+    },
+
+    async update(
+      id: string,
+      payload: UpdateClientPayload
+    ): Promise<{ message: string; data: Client }> {
+      return request<{ message: string; data: Client }>(
+        `/admin/clients/${id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        },
+        true
+      );
+    },
+
+    async delete(id: string): Promise<void> {
+      await request(`/admin/clients/${id}`, { method: 'DELETE' }, true);
     },
   },
 };

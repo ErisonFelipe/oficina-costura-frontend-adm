@@ -146,3 +146,52 @@ export interface PaginatedRomaneios {
   data: Romaneio[];
   pagination: Pagination;
 }
+// ===== CLIENTES =====
+export interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  document: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    romaneios: number;
+  };
+}
+
+export interface ClientSearchResult {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  document: string | null;
+}
+
+export interface CreateClientPayload {
+  name: string;
+  phone: string;
+  email?: string;
+  document?: string;
+  address?: string;
+  notes?: string;
+}
+
+export interface UpdateClientPayload extends Partial<CreateClientPayload> {
+  active?: boolean;
+}
+
+export interface ListClientsParams {
+  search?: string;
+  active?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedClients {
+  data: Client[];
+  pagination: Pagination;
+}
