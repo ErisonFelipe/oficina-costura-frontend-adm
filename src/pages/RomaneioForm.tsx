@@ -190,8 +190,8 @@ export const RomaneioForm: React.FC = () => {
           quantidade: Number(item.quantidade) || 0,
         })),
         cobranca: {
-          valorUnitario: Number(valorUnitario),
-          valorTotal: Number(valorTotal),
+          valorUnitario: valorUnitarioCalculado,
+          valorTotal: valorTotalCalculado,
           observacao: cobrancaObservacao.trim() || undefined,
         },
         observacoes: form.observacoes.trim() || undefined,
