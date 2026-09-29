@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiScissors } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { ApiException } from '../lib/api';
-
+import { Link } from 'react-router-dom';
 interface LocationState {
   from?: { pathname: string };
 }
@@ -191,9 +191,8 @@ export const Login: React.FC = () => {
                   }}
                   placeholder="seu@email.com"
                   disabled={isSubmitting}
-                  className={`input pl-11 ${
-                    errors.email ? 'border-red-400 focus:border-red-500' : ''
-                  }`}
+                  className={`input pl-11 ${errors.email ? 'border-red-400 focus:border-red-500' : ''
+                    }`}
                 />
               </div>
               {errors.email && (
@@ -220,9 +219,8 @@ export const Login: React.FC = () => {
                   }}
                   placeholder="••••••••"
                   disabled={isSubmitting}
-                  className={`input pl-11 pr-11 ${
-                    errors.password ? 'border-red-400 focus:border-red-500' : ''
-                  }`}
+                  className={`input pl-11 pr-11 ${errors.password ? 'border-red-400 focus:border-red-500' : ''
+                    }`}
                 />
                 <button
                   type="button"
@@ -260,17 +258,23 @@ export const Login: React.FC = () => {
                 </>
               )}
             </button>
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <Link
+                to="/register"
+                className="text-accent hover:underline font-semibold"
+              >
+                Criar conta
+              </Link>
+              <Link
+                to="/forgot-password"
+                className="text-text-secondary hover:text-accent hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
           </form>
 
-          {/* Credenciais de desenvolvimento */}
-          <div className="mt-8 p-4 rounded-lg bg-accent-bg/50 border border-accent-light/50">
-            <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-2">
-              Credenciais de desenvolvimento
-            </p>
-            <p className="text-xs text-text-secondary font-mono">
-              admin@oficina.local / admin123
-            </p>
-          </div>
+
 
           {/* Rodapé */}
           <p className="mt-8 text-center text-xs text-text-light">

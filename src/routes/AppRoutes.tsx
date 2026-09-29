@@ -13,6 +13,8 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { RomaneioForm } from '../pages/RomaneioForm';
 import { RomaneioDetail } from '../pages/RomaneioDetail';
 import { Clients } from '../pages/Clients';
+import { Register } from '../pages/Register';
+import { ForgotPassword } from '../pages/ForgotPassword';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -20,6 +22,8 @@ export const AppRoutes: React.FC = () => {
       <Routes>
         {/* Pública */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protegidas — envolvidas pelo layout admin */}
         <Route

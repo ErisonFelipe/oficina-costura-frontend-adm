@@ -20,6 +20,8 @@ import type {
   UpdateClientPayload,
   ListClientsParams,
   PaginatedClients,
+  RegisterPayload,
+  RegisterResponse
 } from '../types';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
@@ -62,7 +64,7 @@ async function request<T>(
     ...options.headers,
   };
 
-   // Só envia Content-Type se houver body
+  // Só envia Content-Type se houver body
   if (options.body) {
     (headers as Record<string, string>)['Content-Type'] = 'application/json';
   }
@@ -121,6 +123,13 @@ export const api = {
     async logout(): Promise<void> {
       await request('/auth/logout', { method: 'POST' });
       tokenStorage.remove();
+    },
+    
+    async register(payload: RegisterPayload): Promise<RegisterResponse> {
+      return request<RegisterResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
     },
   },
 
@@ -215,7 +224,7 @@ export const api = {
       await request(`/admin/users/${id}`, { method: 'DELETE' }, true);
     },
   },
-    // ===== ROMANEIOS (ADMIN) =====
+  // ===== ROMANEIOS (ADMIN) =====
   romaneios: {
     async list(params: ListRomaneiosParams = {}): Promise<PaginatedRomaneios> {
       const search = new URLSearchParams();
@@ -296,7 +305,7 @@ export const api = {
       return response.blob();
     },
   },
-    // ===== CLIENTES (ADMIN) =====
+  // ===== CLIENTES (ADMIN) =====
   clients: {
     async list(params: ListClientsParams = {}): Promise<PaginatedClients> {
       const search = new URLSearchParams();
