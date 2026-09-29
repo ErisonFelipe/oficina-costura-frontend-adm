@@ -15,6 +15,13 @@ import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 import type { GradeItem } from '../types';
 import { ClientAutocomplete } from '../components/ui/ClientAutocomplete';
+import {
+  getUnitPrice,
+  getTotalPrice,
+  getPriceRange,
+  getRangeLabel,
+  formatBRL,
+} from '../utils/pricing';
 
 interface FormData {
   cliente: string;
@@ -56,11 +63,15 @@ export const RomaneioForm: React.FC = () => {
   const [grade, setGrade] = useState<GradeItem[]>([
     { cor: '', tamanho: '', quantidade: 0 },
   ]);
-  const [valorUnitario, setValorUnitario] = useState('');
-  const [valorTotal, setValorTotal] = useState('');
   const [cobrancaObservacao, setCobrancaObservacao] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Cálculo automático da cobrança
+  const quantidadePecasNum = Number(form.quantidadePecas) || 0;
+  const valorUnitarioCalculado = getUnitPrice(quantidadePecasNum);
+  const valorTotalCalculado = getTotalPrice(quantidadePecasNum);
+  const rangeAplicado = getPriceRange(quantidadePecasNum);
 
   // ===== HANDLERS DO FORM =====
   const handleChange = (
@@ -133,13 +144,6 @@ export const RomaneioForm: React.FC = () => {
     }
     if (grade.length === 0) {
       newErrors.grade = 'Adicione pelo menos uma linha na grade';
-    }
-
-    if (!valorUnitario || Number(valorUnitario) < 0) {
-      newErrors.valorUnitario = 'Valor unitário é obrigatório';
-    }
-    if (!valorTotal || Number(valorTotal) < 0) {
-      newErrors.valorTotal = 'Valor total é obrigatório';
     }
 
     setErrors(newErrors);
@@ -537,53 +541,52 @@ export const RomaneioForm: React.FC = () => {
             <h2 className="font-serif text-lg font-semibold">Cobrança</h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="label">Valor unitário (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={valorUnitario}
-                onChange={(e) => setValorUnitario(e.target.value)}
-                placeholder="0.50"
-                min="0"
-                disabled={isSubmitting}
-                className={`input ${errors.valorUnitario ? 'border-red-400' : ''}`}
-              />
-              {errors.valorUnitario && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.valorUnitario}
-                </p>
-              )}
+          {quantidadePecasNum === 0 ? (
+            <div className="text-sm text-text-light text-center py-6">
+              💡 Informe a quantidade de peças acima para calcular o valor automaticamente.
             </div>
-            <div>
-              <label className="label">Valor total (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={valorTotal}
-                onChange={(e) => setValorTotal(e.target.value)}
-                placeholder="668.00"
-                min="0"
-                disabled={isSubmitting}
-                className={`input ${errors.valorTotal ? 'border-red-400' : ''}`}
-              />
-              {errors.valorTotal && (
-                <p className="mt-1 text-xs text-red-500">{errors.valorTotal}</p>
-              )}
+          ) : (
+            <div className="space-y-4">
+              {/* Faixa aplicada */}
+              <div className="p-3 rounded-lg bg-accent-bg border border-accent-light">
+                <div className="text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+                  Faixa de preço aplicada
+                </div>
+                <div className="text-sm text-text-primary font-medium">
+                  {getRangeLabel(rangeAplicado)}
+                </div>
+              </div>
+
+              {/* Valores calculados */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Valor unitário</label>
+                  <div className="px-4 py-2.5 border-2 border-border-light rounded-lg bg-bg-secondary text-sm font-semibold text-text-primary">
+                    {formatBRL(valorUnitarioCalculado)}
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Valor total</label>
+                  <div className="px-4 py-2.5 border-2 border-accent rounded-lg bg-accent-bg text-lg font-bold text-accent">
+                    {formatBRL(valorTotalCalculado)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Observação (ainda editável) */}
+              <div>
+                <label className="label">Observação da cobrança</label>
+                <input
+                  type="text"
+                  value={cobrancaObservacao}
+                  onChange={(e) => setCobrancaObservacao(e.target.value)}
+                  placeholder="Opcional"
+                  disabled={isSubmitting}
+                  className="input"
+                />
+              </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className="label">Observação da cobrança</label>
-              <input
-                type="text"
-                value={cobrancaObservacao}
-                onChange={(e) => setCobrancaObservacao(e.target.value)}
-                placeholder="Opcional"
-                disabled={isSubmitting}
-                className="input"
-              />
-            </div>
-          </div>
+          )}
         </motion.div>
 
         {/* ===== CONFERÊNCIA ===== */}
