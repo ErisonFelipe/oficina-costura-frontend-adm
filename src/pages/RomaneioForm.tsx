@@ -14,9 +14,11 @@ import {
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 import type { GradeItem } from '../types';
+import { ClientAutocomplete } from '../components/ui/ClientAutocomplete';
 
 interface FormData {
   cliente: string;
+  clientId: string | null;
   data: string;
   produto: string;
   referencia: string;
@@ -33,6 +35,7 @@ interface FormData {
 
 const initialFormData: FormData = {
   cliente: '',
+  clientId: null,
   data: new Date().toISOString().split('T')[0], // hoje, formato YYYY-MM-DD
   produto: '',
   referencia: '',
@@ -157,6 +160,7 @@ export const RomaneioForm: React.FC = () => {
     try {
       const payload = {
         cliente: form.cliente.trim(),
+        clientId: form.clientId,
         data: form.data,
         produto: form.produto.trim(),
         referencia: form.referencia.trim() || undefined,
@@ -241,14 +245,14 @@ export const RomaneioForm: React.FC = () => {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Cliente *</label>
-              <input
-                type="text"
-                name="cliente"
+              <ClientAutocomplete
                 value={form.cliente}
-                onChange={handleChange}
-                placeholder="Ex: Leo"
+                clientId={form.clientId}
+                onChange={(name, id) =>
+                  setForm((prev) => ({ ...prev, cliente: name, clientId: id }))
+                }
                 disabled={isSubmitting}
-                className={`input ${errors.cliente ? 'border-red-400' : ''}`}
+                error={!!errors.cliente}
               />
               {errors.cliente && (
                 <p className="mt-1 text-xs text-red-500">{errors.cliente}</p>
