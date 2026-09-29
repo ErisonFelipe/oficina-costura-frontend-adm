@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { FiSend } from 'react-icons/fi';
+import { openWhatsApp, buildRomaneioMessage } from '../utils/whatsapp';
 import {
   FiArrowLeft,
   FiDownload,
@@ -114,6 +116,70 @@ export const RomaneioDetail: React.FC = () => {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!romaneio) return;
+
+    // Precisa ter o cliente cadastrado para ter o telefone
+    if (!romaneio.client) {
+      toast.error(
+        'Este romaneio não tem um cliente cadastrado. Edite o romaneio e vincule um cliente.'
+      );
+      return;
+    }
+
+    if (!romaneio.client.phone) {
+      toast.error('O cliente não tem telefone cadastrado.');
+      return;
+    }
+
+    // Gera o PDF primeiro (fica pronto pro admin anexar)
+    try {
+      const token = tokenStorage.get();
+      if (!token) {
+        toast.error('Sessão expirada');
+        return;
+      }
+
+      toast.loading('Preparando PDF...', { id: 'wpp' });
+
+      const response = await fetch(
+        `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `romaneio-${romaneio.numero}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+
+      toast.success('PDF baixado! Agora anexe na conversa do WhatsApp.', {
+        id: 'wpp',
+        duration: 5000,
+      });
+    } catch {
+      toast.error('Erro ao gerar PDF', { id: 'wpp' });
+    }
+
+    // Abre o WhatsApp com a mensagem pronta
+    const message = buildRomaneioMessage({
+      numero: romaneio.numero,
+      cliente: romaneio.cliente,
+      produto: romaneio.produto,
+      data: romaneio.data,
+      quantidadePecas: romaneio.quantidadePecas,
+      cobranca: romaneio.cobranca,
+    });
+
+    openWhatsApp(romaneio.client.phone, message);
   };
 
   const handleDelete = async () => {
@@ -295,6 +361,15 @@ export const RomaneioDetail: React.FC = () => {
                 Editar
               </button>
               <button
+                onClick={handleSendWhatsApp}
+                className="btn text-sm text-white"
+                style={{ backgroundColor: '#25D366' }}
+                title="Enviar por WhatsApp"
+              >
+                <FiSend className="w-4 h-4" />
+                Enviar
+              </button>
+              <button
                 onClick={handleDownloadPdf}
                 disabled={isDownloading}
                 className="btn btn-primary text-sm"
@@ -369,7 +444,7 @@ export const RomaneioDetail: React.FC = () => {
               isEditing={isEditing}
               type="date"
               onChange={(v) => updateField('data', v)}
-	      display={romaneio.data.split('-').reverse().join('/')}/>
+              display={romaneio.data.split('-').reverse().join('/')} />
             <Field
               label="Produto"
               value={form.produto}
@@ -705,11 +780,10 @@ const Field: React.FC<FieldProps> = ({
         )
       ) : (
         <div
-          className={`text-sm ${
-            highlight
+          className={`text-sm ${highlight
               ? 'font-serif text-2xl font-bold text-accent'
               : 'text-text-primary'
-          }`}
+            }`}
         >
           {display ?? (value?.toString().trim() || fallback || value)}
         </div>

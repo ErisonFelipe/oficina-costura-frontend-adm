@@ -92,6 +92,13 @@ export interface Romaneio {
   id: string;
   numero: string;
   cliente: string;
+  clientId: string | null; 
+  client?: {                   // ← novo
+    id: string;
+    name: string;
+    phone: string;
+    email: string | null;
+  } | null;
   data: string;
   produto: string;
   referencia: string | null;
