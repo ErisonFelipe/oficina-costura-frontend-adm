@@ -105,7 +105,7 @@ export interface Romaneio {
   tipoTecido: string | null;
   quantidadeRolos: number | null;
   quantidadeFolhas: number | null;
-  quantidadeEncaixados: number | null;
+  quantidadeEncaixados: string | null;
   quantidadePecas: number;
   quantidadeVolumes: number | null;
   cortadorResponsavel: string | null;
@@ -125,7 +125,7 @@ export interface CreateRomaneioPayload {
   tipoTecido?: string;
   quantidadeRolos?: number;
   quantidadeFolhas?: number;
-  quantidadeEncaixados?: number;
+  quantidadeEncaixados?: string;
   quantidadePecas: number;
   quantidadeVolumes?: number;
   cortadorResponsavel?: string;

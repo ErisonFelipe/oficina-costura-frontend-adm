@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -66,12 +66,45 @@ export const RomaneioForm: React.FC = () => {
   const [cobrancaObservacao, setCobrancaObservacao] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+    // Estados locais para os valores editáveis
+  const [valorUnitarioInput, setValorUnitarioInput] = useState('');
+  const [valorTotalInput, setValorTotalInput] = useState('');
+  const [editedManually, setEditedManually] = useState(false);
 
     // Cálculo automático da cobrança
+   // Cálculo automático da cobrança
   const quantidadePecasNum = Number(form.quantidadePecas) || 0;
   const valorUnitarioCalculado = getUnitPrice(quantidadePecasNum);
   const valorTotalCalculado = getTotalPrice(quantidadePecasNum);
   const rangeAplicado = getPriceRange(quantidadePecasNum);
+
+  // ===== SINCRONIZAÇÃO AUTOMÁTICA (Opção B) =====
+  // Sempre que a quantidade de peças muda, se o usuário NÃO editou manualmente,
+  // atualiza os valores automaticamente.
+  useEffect(() => {
+    if (!editedManually && quantidadePecasNum > 0) {
+      setValorUnitarioInput(String(valorUnitarioCalculado));
+      setValorTotalInput(String(valorTotalCalculado));
+    }
+  }, [quantidadePecasNum, editedManually, valorUnitarioCalculado, valorTotalCalculado]);
+
+  // Reset do "editedManually" quando a quantidade de peças muda
+  // (para o sistema voltar a calcular automaticamente)
+  useEffect(() => {
+    setEditedManually(false);
+  }, [form.quantidadePecas]);
+
+  // Helpers para o usuário editar manualmente
+  const handleValorUnitarioChange = (value: string) => {
+    setValorUnitarioInput(value);
+    setEditedManually(true);
+  };
+
+  const handleValorTotalChange = (value: string) => {
+    setValorTotalInput(value);
+    setEditedManually(true);
+  };
 
   // ===== HANDLERS DO FORM =====
   const handleChange = (
@@ -175,9 +208,7 @@ export const RomaneioForm: React.FC = () => {
         quantidadeFolhas: form.quantidadeFolhas
           ? Number(form.quantidadeFolhas)
           : undefined,
-        quantidadeEncaixados: form.quantidadeEncaixados
-          ? Number(form.quantidadeEncaixados)
-          : undefined,
+        quantidadeEncaixados: form.quantidadeEncaixados || undefined,
         quantidadePecas: Number(form.quantidadePecas),
         quantidadeVolumes: form.quantidadeVolumes
           ? Number(form.quantidadeVolumes)
@@ -190,9 +221,9 @@ export const RomaneioForm: React.FC = () => {
           quantidade: Number(item.quantidade) || 0,
         })),
         cobranca: {
-          valorUnitario: valorUnitarioCalculado,
-          valorTotal: valorTotalCalculado,
-          observacao: cobrancaObservacao.trim() || undefined,
+        valorUnitario: Number(valorUnitarioInput) || valorUnitarioCalculado,
+        valorTotal: Number(valorTotalInput) || valorTotalCalculado,
+        observacao: cobrancaObservacao.trim() || undefined,
         },
         observacoes: form.observacoes.trim() || undefined,
       };
@@ -362,7 +393,7 @@ export const RomaneioForm: React.FC = () => {
             <div>
               <label className="label">Encaixados</label>
               <input
-                type="number"
+                type="text"
                 name="quantidadeEncaixados"
                 value={form.quantidadeEncaixados}
                 onChange={handleChange}
@@ -529,7 +560,7 @@ export const RomaneioForm: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* ===== COBRANÇA ===== */}
+               {/* ===== COBRANÇA ===== */}
         <motion.div
           className="card p-6"
           initial={{ opacity: 0, y: 10 }}
@@ -541,52 +572,70 @@ export const RomaneioForm: React.FC = () => {
             <h2 className="font-serif text-lg font-semibold">Cobrança</h2>
           </div>
 
-          {quantidadePecasNum === 0 ? (
-            <div className="text-sm text-text-light text-center py-6">
-              💡 Informe a quantidade de peças acima para calcular o valor automaticamente.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Faixa aplicada */}
-              <div className="p-3 rounded-lg bg-accent-bg border border-accent-light">
-                <div className="text-xs uppercase tracking-wider text-accent font-semibold mb-1">
-                  Faixa de preço aplicada
-                </div>
-                <div className="text-sm text-text-primary font-medium">
-                  {getRangeLabel(rangeAplicado)}
-                </div>
+          {quantidadePecasNum > 0 && (
+            <div className="mb-4 p-3 rounded-lg bg-accent-bg border border-accent-light">
+              <div className="text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+                Faixa de preço sugerida
               </div>
-
-              {/* Valores calculados */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Valor unitário</label>
-                  <div className="px-4 py-2.5 border-2 border-border-light rounded-lg bg-bg-secondary text-sm font-semibold text-text-primary">
-                    {formatBRL(valorUnitarioCalculado)}
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Valor total</label>
-                  <div className="px-4 py-2.5 border-2 border-accent rounded-lg bg-accent-bg text-lg font-bold text-accent">
-                    {formatBRL(valorTotalCalculado)}
-                  </div>
-                </div>
+              <div className="text-sm text-text-primary font-medium">
+                {getRangeLabel(rangeAplicado)}
               </div>
-
-              {/* Observação (ainda editável) */}
-              <div>
-                <label className="label">Observação da cobrança</label>
-                <input
-                  type="text"
-                  value={cobrancaObservacao}
-                  onChange={(e) => setCobrancaObservacao(e.target.value)}
-                  placeholder="Opcional"
-                  disabled={isSubmitting}
-                  className="input"
-                />
-              </div>
+              {editedManually && (
+                <div className="text-xs text-amber-700 mt-2 flex items-center gap-1">
+                  ⚠️ Você editou manualmente. Os valores não serão recalculados até você mudar a quantidade de peças.
+                </div>
+              )}
             </div>
           )}
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Valor unitário (R$)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={valorUnitarioInput}
+                onChange={(e) => handleValorUnitarioChange(e.target.value)}
+                placeholder="0.00"
+                disabled={isSubmitting}
+                className="input"
+              />
+              {quantidadePecasNum > 0 && !editedManually && (
+                <p className="mt-1 text-xs text-text-light">
+                  Sugerido pela tabela: {formatBRL(valorUnitarioCalculado)}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label">Valor total (R$)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={valorTotalInput}
+                onChange={(e) => handleValorTotalChange(e.target.value)}
+                placeholder="0.00"
+                disabled={isSubmitting}
+                className="input font-semibold"
+              />
+              {quantidadePecasNum > 0 && !editedManually && (
+                <p className="mt-1 text-xs text-text-light">
+                  Sugerido pela tabela: {formatBRL(valorTotalCalculado)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="label">Observação da cobrança</label>
+            <input
+              type="text"
+              value={cobrancaObservacao}
+              onChange={(e) => setCobrancaObservacao(e.target.value)}
+              placeholder="Opcional"
+              disabled={isSubmitting}
+              className="input"
+            />
+          </div>
         </motion.div>
 
         {/* ===== CONFERÊNCIA ===== */}
