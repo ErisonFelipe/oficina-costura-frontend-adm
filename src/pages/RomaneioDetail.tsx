@@ -218,9 +218,7 @@ export const RomaneioDetail: React.FC = () => {
         quantidadeFolhas: form.quantidadeFolhas
           ? Number(form.quantidadeFolhas)
           : undefined,
-        quantidadeEncaixados: form.quantidadeEncaixados
-          ? Number(form.quantidadeEncaixados)
-          : undefined,
+        quantidadeEncaixados: form.quantidadeEncaixados || undefined,
         quantidadePecas: Number(form.quantidadePecas),
         quantidadeVolumes: form.quantidadeVolumes
           ? Number(form.quantidadeVolumes)
