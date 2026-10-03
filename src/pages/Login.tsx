@@ -164,7 +164,7 @@ export const Login: React.FC = () => {
 
           <div className="mb-8">
             <h2 className="font-serif text-3xl font-semibold text-text-primary mb-2">
-              Bem-vindo de volta
+              Bem-vindo ao painel
             </h2>
             <p className="text-sm text-text-secondary">
               Faça login para acessar o painel administrativo.
