@@ -9,8 +9,7 @@ on:
 env:
   AWS_REGION: us-east-1
   S3_BUCKET: oficina-costura-admin-painel
-  CLOUDFRONT_DISTRIBUTION_ID: E1AJ08U38CATEK
-  CLOUDFRONT_URL: https://d344yz7xjvxwku.cloudfront.net
+  CLOUDFRONT_DOMAIN: d344yz7xjvxwku.cloudfront.net
 
 jobs:
   deploy:
@@ -42,24 +41,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: 🔍 Listar CloudFronts disponíveis (debug)
-        run: |
-          echo "=== CloudFronts disponíveis ==="
-          aws cloudfront list-distributions \
-            --query 'DistributionList.Items[*].[Id,DomainName]' \
-            --output table
-
       - name: ☁️ Upload para o S3
         run: |
           aws s3 sync dist/ s3://${{ env.S3_BUCKET }} --delete
 
       - name: 🔄 Invalidar cache do CloudFront
         run: |
+          # Descobre o ID automaticamente pela AWS, sem digitar
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?DomainName=='${{ env.CLOUDFRONT_DOMAIN }}'].Id" \
+            --output text)
+          
+          echo "CloudFront ID encontrado: $DIST_ID"
+          echo "Length: ${#DIST_ID}"
+          
+          if [ -z "$DIST_ID" ]; then
+            echo "❌ CloudFront não encontrado para o domínio ${{ env.CLOUDFRONT_DOMAIN }}"
+            exit 1
+          fi
+          
           aws cloudfront create-invalidation \
-            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id "$DIST_ID" \
             --paths "/*"
 
       - name: ✅ Deploy concluído
         run: |
           echo "🎉 Deploy realizado com sucesso!"
-          echo "🌐 Acesse: ${{ env.CLOUDFRONT_URL }}"
+          echo "🌐 Acesse: https://${{ env.CLOUDFRONT_DOMAIN }}"
