@@ -6,6 +6,12 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: oficina-costura-admin-painel
+  CLOUDFRONT_DISTRIBUTION_ID: E1AJ08U38CATEK
+  CLOUDFRONT_URL: https://d344yz7xjvxwku.cloudfront.net
+
 jobs:
   deploy:
     name: Build & Deploy
@@ -34,19 +40,26 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔍 Listar CloudFronts disponíveis (debug)
+        run: |
+          echo "=== CloudFronts disponíveis ==="
+          aws cloudfront list-distributions \
+            --query 'DistributionList.Items[*].[Id,DomainName]' \
+            --output table
 
       - name: ☁️ Upload para o S3
         run: |
-          aws s3 sync dist/ s3://oficina-costura-admin-painel --delete
+          aws s3 sync dist/ s3://${{ env.S3_BUCKET }} --delete
 
       - name: 🔄 Invalidar cache do CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id "E1AJ08U38CATEK" \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
       - name: ✅ Deploy concluído
         run: |
           echo "🎉 Deploy realizado com sucesso!"
-          echo "🌐 Acesse: https://d344yz7xjvxwku.cloudfront.net"
+          echo "🌐 Acesse: ${{ env.CLOUDFRONT_URL }}"
