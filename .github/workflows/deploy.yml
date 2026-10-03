@@ -1,0 +1,5 @@
+      - name: 🔄 Invalidar cache do CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E1AJ08U38CATEK \
+            --paths "/*"
