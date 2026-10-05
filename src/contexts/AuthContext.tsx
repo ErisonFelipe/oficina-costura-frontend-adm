@@ -8,7 +8,6 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -17,25 +16,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      const response = await api.auth.refresh();
-      setUser(response.data.user);
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+  // Ao montar, tenta restaurar a sessão UMA vez
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const response = await api.auth.refresh();
+        if (mounted) setUser(response.data.user);
+      } catch {
+        // Sem sessão ativa — normal
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
-
+  // Escuta eventos de "não autorizado" (vindos do api.ts)
   useEffect(() => {
     const handleUnauthorized = () => {
       setUser(null);
     };
+
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
@@ -60,7 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     login,
     logout,
-    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
