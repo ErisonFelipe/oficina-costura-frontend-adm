@@ -20,7 +20,15 @@ export interface LoginCredentials {
 export interface AuthResponse {
   message: string;
   data: {
-    token: string;
+    accessToken: string;
+    user: User;
+  };
+}
+
+export interface RefreshResponse {
+  message: string;
+  data: {
+    accessToken: string;
     user: User;
   };
 }

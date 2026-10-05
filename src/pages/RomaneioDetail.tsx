@@ -16,7 +16,7 @@ import {
   FiDollarSign,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { api, tokenStorage, API_URL } from '../lib/api';
+import { api } from '../lib/api';
 import type { Romaneio, GradeItem } from '../types';
 
 export const RomaneioDetail: React.FC = () => {
@@ -79,27 +79,14 @@ export const RomaneioDetail: React.FC = () => {
   }, [id, navigate]);
 
   // ===== AÇÕES =====
-  const handleDownloadPdf = async () => {
+    const handleDownloadPdf = async () => {
     if (!romaneio) return;
 
     try {
       setIsDownloading(true);
-      const token = tokenStorage.get();
-      if (!token) {
-        toast.error('Sessão expirada');
-        return;
-      }
-
       toast.loading('Gerando PDF...', { id: 'pdf' });
 
-      const response = await fetch(
-        `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (!response.ok) throw new Error('Erro ao gerar PDF');
-
-      const blob = await response.blob();
+      const blob = await api.romaneios.downloadPdf(romaneio.id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -135,31 +122,19 @@ export const RomaneioDetail: React.FC = () => {
     }
 
     // Gera o PDF primeiro (fica pronto pro admin anexar)
+        // Gera o PDF primeiro (fica pronto pro admin anexar)
     try {
-      const token = tokenStorage.get();
-      if (!token) {
-        toast.error('Sessão expirada');
-        return;
-      }
-
       toast.loading('Preparando PDF...', { id: 'wpp' });
 
-      const response = await fetch(
-        `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `romaneio-${romaneio.numero}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }
+      const blob = await api.romaneios.downloadPdf(romaneio.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `romaneio-${romaneio.numero}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
       toast.success('PDF baixado! Agora anexe na conversa do WhatsApp.', {
         id: 'wpp',
@@ -167,7 +142,7 @@ export const RomaneioDetail: React.FC = () => {
       });
     } catch {
       toast.error('Erro ao gerar PDF', { id: 'wpp' });
-    }
+    } 
 
     // Abre o WhatsApp com a mensagem pronta
     const message = buildRomaneioMessage({

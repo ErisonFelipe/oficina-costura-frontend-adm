@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
-import { api, tokenStorage } from '../lib/api';
+import { api } from '../lib/api';
 import type { LoginCredentials, User } from '../types';
 
 interface AuthContextValue {
@@ -17,21 +17,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega usuário ao iniciar (se tiver token)
   const refreshUser = useCallback(async () => {
-    const token = tokenStorage.get();
-    if (!token) {
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await api.auth.me();
-      setUser(response.data);
+      const response = await api.auth.refresh();
+      setUser(response.data.user);
     } catch {
-      // Token inválido/expirado
-      tokenStorage.remove();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -42,20 +32,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser();
   }, [refreshUser]);
 
-  // Reagir a 401 do interceptor
   useEffect(() => {
     const handleUnauthorized = () => {
-      tokenStorage.remove();
       setUser(null);
     };
-
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     const response = await api.auth.login(credentials);
-    tokenStorage.set(response.data.token);
     setUser(response.data.user);
   }, []);
 
@@ -63,9 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.auth.logout();
     } catch {
-      // Ignora erro — o importante é limpar local
+      // ignora
     }
-    tokenStorage.remove();
     setUser(null);
   }, []);
 

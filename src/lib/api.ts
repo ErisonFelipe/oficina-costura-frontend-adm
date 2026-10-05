@@ -20,21 +20,23 @@ import type {
   UpdateClientPayload,
   ListClientsParams,
   PaginatedClients,
+  RegisterPayload,
+  RegisterResponse,
 } from '../types';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
-const TOKEN_KEY = 'oficina_adm_token';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3334/api';
 
-// ===== TOKEN MANAGEMENT =====
-export const tokenStorage = {
-  get(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+// ===== ACCESS TOKEN EM MEMÓRIA =====
+// NUNCA usa localStorage. Só existe enquanto a aba estiver aberta.
+let accessToken: string | null = null;
+
+export const tokenMemory = {
+  get: () => accessToken,
+  set: (token: string) => {
+    accessToken = token;
   },
-  set(token: string) {
-    localStorage.setItem(TOKEN_KEY, token);
-  },
-  remove() {
-    localStorage.removeItem(TOKEN_KEY);
+  clear: () => {
+    accessToken = null;
   },
 };
 
@@ -51,6 +53,40 @@ export class ApiException extends Error {
   }
 }
 
+// ===== REFRESH AUTOMÁTICO =====
+// Evita múltiplas chamadas simultâneas de refresh
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  // Se já tem um refresh em andamento, aguarda ele
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // envia o cookie httpOnly
+      });
+
+      if (!response.ok) {
+        throw new Error('Refresh falhou');
+      }
+
+      const data = await response.json();
+      const newToken = data.data?.accessToken;
+
+      if (!newToken) throw new Error('Token não retornado');
+
+      accessToken = newToken;
+      return newToken;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 // ===== FETCH WRAPPER =====
 async function request<T>(
   endpoint: string,
@@ -58,28 +94,51 @@ async function request<T>(
   requireAuth = false
 ): Promise<T> {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
 
-   // Só envia Content-Type se houver body
   if (options.body) {
     (headers as Record<string, string>)['Content-Type'] = 'application/json';
   }
 
   if (requireAuth) {
-    const token = tokenStorage.get();
-    if (!token) {
-      throw new ApiException('Não autenticado', 401);
+    if (!accessToken) {
+      // Tenta renovar antes mesmo de tentar
+      try {
+        await refreshAccessToken();
+      } catch {
+        throw new ApiException('Não autenticado', 401);
+      }
     }
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  let response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // envia cookies (refresh)
   });
 
+  // Se 401 e é rota autenticada, tenta renovar
+  if (response.status === 401 && requireAuth) {
+    try {
+      await refreshAccessToken();
+      // Repete a requisição original com o novo token
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
+      response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
+    } catch {
+      // Refresh falhou — limpa e avisa o app
+      accessToken = null;
+      window.dispatchEvent(new Event('auth:unauthorized'));
+      throw new ApiException('Sessão expirada', 401);
+    }
+  }
+
+  // 204 No Content
   if (response.status === 204) {
     return undefined as T;
   }
@@ -87,11 +146,6 @@ async function request<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if (response.status === 401 && requireAuth) {
-      tokenStorage.remove();
-      window.dispatchEvent(new Event('auth:unauthorized'));
-    }
-
     const err = data as ApiError;
     throw new ApiException(
       err.error || err.message || `Erro ${response.status}`,
@@ -108,19 +162,41 @@ export const api = {
   // ===== AUTENTICAÇÃO =====
   auth: {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-      return request<AuthResponse>('/auth/login', {
+      const response = await request<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
+      // Salva o access token em memória
+      accessToken = response.data.accessToken;
+      return response;
     },
 
     async me(): Promise<{ data: User }> {
       return request<{ data: User }>('/auth/me', {}, true);
     },
 
+    async refresh(): Promise<{ data: { accessToken: string; user: User } }> {
+      const response = await request<{ data: { accessToken: string; user: User } }>(
+        '/auth/refresh',
+        { method: 'POST' }
+      );
+      accessToken = response.data.accessToken;
+      return response;
+    },
+
     async logout(): Promise<void> {
-      await request('/auth/logout', { method: 'POST' });
-      tokenStorage.remove();
+      try {
+        await request('/auth/logout', { method: 'POST' });
+      } finally {
+        accessToken = null;
+      }
+    },
+
+    async register(payload: RegisterPayload): Promise<RegisterResponse> {
+      return request<RegisterResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
     },
   },
 
@@ -215,7 +291,8 @@ export const api = {
       await request(`/admin/users/${id}`, { method: 'DELETE' }, true);
     },
   },
-    // ===== ROMANEIOS (ADMIN) =====
+
+  // ===== ROMANEIOS =====
   romaneios: {
     async list(params: ListRomaneiosParams = {}): Promise<PaginatedRomaneios> {
       const search = new URLSearchParams();
@@ -237,11 +314,7 @@ export const api = {
     },
 
     async stats(): Promise<{ data: RomaneioStats }> {
-      return request<{ data: RomaneioStats }>(
-        '/admin/romaneios/stats',
-        {},
-        true
-      );
+      return request<{ data: RomaneioStats }>('/admin/romaneios/stats', {}, true);
     },
 
     async create(
@@ -275,18 +348,14 @@ export const api = {
       await request(`/admin/romaneios/${id}`, { method: 'DELETE' }, true);
     },
 
-    // Retorna a URL para baixar o PDF (o navegador faz o download direto)
     getPdfUrl(id: string): string {
       return `${API_URL}/admin/romaneios/${id}/pdf`;
     },
 
-    // Baixa o PDF como blob (para casos onde precisamos do arquivo)
     async downloadPdf(id: string): Promise<Blob> {
-      const token = tokenStorage.get();
-      if (!token) throw new ApiException('Não autenticado', 401);
-
       const response = await fetch(`${API_URL}/admin/romaneios/${id}/pdf`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -296,7 +365,8 @@ export const api = {
       return response.blob();
     },
   },
-    // ===== CLIENTES (ADMIN) =====
+
+  // ===== CLIENTES (ADMIN) =====
   clients: {
     async list(params: ListClientsParams = {}): Promise<PaginatedClients> {
       const search = new URLSearchParams();
@@ -358,3 +428,11 @@ export const api = {
     },
   },
 };
+
+// Helper para URL completa da imagem
+export const getImageUrl = (filename: string): string => {
+  return `/uploads/gallery/${filename}`;
+};
+
+// Exporta para uso onde precisamos da URL base
+export { API_URL };

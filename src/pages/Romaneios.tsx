@@ -13,7 +13,7 @@ import {
 import toast from 'react-hot-toast';
 import { Pagination } from '../components/ui/Pagination';
 import { EmptyState } from '../components/ui/EmptyState';
-import { api, tokenStorage, API_URL } from '../lib/api';
+import { api } from '../lib/api';
 import type { Romaneio, Pagination as PaginationType } from '../types';
 
 export const Romaneios: React.FC = () => {
@@ -83,23 +83,9 @@ export const Romaneios: React.FC = () => {
 
   const handleDownloadPdf = async (romaneio: Romaneio) => {
     try {
-      const token = tokenStorage.get();
-      if (!token) {
-        toast.error('Sessão expirada. Faça login novamente.');
-        return;
-      }
-
       toast.loading('Gerando PDF...', { id: 'pdf' });
 
-    const response = await fetch(
-  `${API_URL}/admin/romaneios/${romaneio.id}/pdf`,
-  { headers: { Authorization: `Bearer ${token}` } }
-);
-      if (!response.ok) {
-        throw new Error('Erro ao gerar PDF');
-      }
-
-      const blob = await response.blob();
+      const blob = await api.romaneios.downloadPdf(romaneio.id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
